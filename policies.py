@@ -1,5 +1,6 @@
 import chess
 from abc import ABC
+from hash import zobrist_hash
 
 CHECKMATE_SCORE = 1000000
 
@@ -120,7 +121,7 @@ class Bot(ABC):
         print(f"Bot played: {move}")
 
 
-class TreeSearchBot(Bot, ABC):
+class MinimaxBot(Bot, ABC):
     def __init__(self, evaluate_board: callable, depth: int = 5):
         policy = lambda board: minimax(board, evaluate_board, depth)
         super().__init__(policy)
@@ -128,6 +129,6 @@ class TreeSearchBot(Bot, ABC):
         self.evaluate_board = evaluate_board
 
 
-class GreedyBot(TreeSearchBot):
+class GreedyBot(MinimaxBot):
     def __init__(self, depth = 5):
         super().__init__(get_material_difference, depth)
