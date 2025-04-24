@@ -1,0 +1,67 @@
+import chess
+from policies import *
+
+board = chess.Board()
+
+class Player:
+    def __init__(self, color):
+        self.color = color
+
+    def make_move(self, board):
+        move = input(f"Player {self.color}, enter your move: ")
+        try:
+            board.push_uci(move)
+        except ValueError:
+            print("Invalid move. Try again.")
+            self.make_move(board)
+
+
+class Bot(Player):
+    def __init__(self, color, policy: callable):
+        """
+        Initialize the Bot with a color and a policy function.
+        :param color: The color of the bot (e.g., "White" or "Black").
+        :param policy: A callable function that takes a chess board and returns a move in UCI.
+        """
+        super().__init__(color)
+        if policy is None:
+            raise ValueError("Policy function must be provided.")
+        self.policy = policy
+
+    def make_move(self, board: chess.Board):
+        # Simple AI: Random move
+        move = self.policy(board)
+        board.push(move)
+        print(f"Bot {self.color} played: {move}")
+
+
+def start_game(white_player: Player, black_player: Player):
+    while not board.is_game_over():
+        if board.turn:
+            white_player.make_move(board)
+        else:
+            black_player.make_move(board)
+        print(board)
+        print("\n")
+    
+    print_result(board.outcome())
+
+
+def print_result(outcome: chess.Outcome):
+    match outcome.termination:
+        case chess.Termination.CHECKMATE:
+            print("Checkmate!")
+        case chess.Termination.STALEMATE:
+            print("Stalemate!")
+        case chess.Termination.INSUFFICIENT_MATERIAL:
+            print("Insufficient material!")
+        case chess.Termination.FIFTY_MOVES:
+            print("Fifty moves rule!")
+    
+    print(f"Result: {outcome.result()}")
+    
+
+if __name__ == "__main__":
+    white_player = Player("White")
+    black_player = Player("Black")
+    start_game(white_player, black_player)
