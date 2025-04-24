@@ -43,7 +43,7 @@ def get_material_difference(board: chess.Board) -> int:
 
 # def ids(board: chess.Board, heuristic: callable, depth: int = 7) 
 
-def tree_search(board: chess.Board, evaluate_board: callable, depth: int = 7, alpha = -CHECKMATE_SCORE, beta = CHECKMATE_SCORE):
+def minimax(board: chess.Board, evaluate_board: callable, depth: int = 7, alpha = -CHECKMATE_SCORE, beta = CHECKMATE_SCORE):
     if board.is_checkmate():
         if board.turn:
             return -CHECKMATE_SCORE, board.peek()
@@ -62,7 +62,7 @@ def tree_search(board: chess.Board, evaluate_board: callable, depth: int = 7, al
         next_board = board.copy()
         next_board.push(move)
 
-        score = tree_search(next_board, evaluate_board, depth - 1, alpha, beta)[0]
+        score = minimax(next_board, evaluate_board, depth - 1, alpha, beta)[0]
 
         if board.turn:
             if score > alpha:
@@ -85,7 +85,7 @@ def tree_search(board: chess.Board, evaluate_board: callable, depth: int = 7, al
 
 
 def greedy_search(board: chess.Board, depth: int = 5):
-    return tree_search(board, get_material_difference, depth)
+    return minimax(board, get_material_difference, depth)
 
 
 class Player:
@@ -122,7 +122,7 @@ class Bot(ABC):
 
 class TreeSearchBot(Bot, ABC):
     def __init__(self, evaluate_board: callable, depth: int = 5):
-        policy = lambda board: tree_search(board, evaluate_board, depth)
+        policy = lambda board: minimax(board, evaluate_board, depth)
         super().__init__(policy)
         self.depth = depth
         self.evaluate_board = evaluate_board
