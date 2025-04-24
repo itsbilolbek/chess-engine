@@ -1,14 +1,40 @@
 from random import getrandbits
-from chess import PieceType, Square, Board
+import chess
 
 zobrist_table = {
     piece: [getrandbits(64) for _ in range(64)]
-    for piece in PieceType
+    for piece in chess.PieceType
+}
+
+zobrist_black_to_move = getrandbits(64)
+zobrist_white_to_move = getrandbits(64)
+zobrist_castling = {
+    "K": getrandbits(64),
+    "Q": getrandbits(64),
+    "k": getrandbits(64),
+    "q": getrandbits(64),
 }
 
 
-def zobrist_hash(board: Board) -> str:
+def zobrist_hash(board: chess.Board):
     h = 0
     for square, piece in board.piece_map():
         h ^= zobrist_table[piece][square]
+
+    if board.turn:
+        h ^= zobrist_black_to_move
+    else:
+        h ^= zobrist_white_to_move
+
+    if board.has_kingside_castling_rights(chess.WHITE):
+        h ^= zobrist_castling["K"]
+    if board.has_queenside_castling_rights(chess.WHITE):
+        h ^= zobrist_castling["Q"]
+    if board.has_kingside_castling_rights(chess.BLACK):
+        h ^= zobrist_castling["k"]
+    if board.has_queenside_castling_rights(chess.BLACK):
+        h ^= zobrist_castling["q"]
+
+    # TODO: handle en passant squares with FEN
+    
     return h
