@@ -42,7 +42,7 @@ def get_material_difference(board: chess.Board) -> int:
 
 # def ids(board: chess.Board, heuristic: callable, depth: int = 7) 
 
-def search(board: chess.Board, evaluate_board: callable, depth: int = 7, alpha = -CHECKMATE_SCORE, beta = CHECKMATE_SCORE):
+def tree_search(board: chess.Board, evaluate_board: callable, depth: int = 7, alpha = -CHECKMATE_SCORE, beta = CHECKMATE_SCORE):
     if board.is_checkmate():
         if board.turn:
             return -CHECKMATE_SCORE, board.peek()
@@ -61,7 +61,7 @@ def search(board: chess.Board, evaluate_board: callable, depth: int = 7, alpha =
         next_board = board.copy()
         next_board.push(move)
 
-        score = search(next_board, evaluate_board, depth - 1, alpha, beta)[0]
+        score = tree_search(next_board, evaluate_board, depth - 1, alpha, beta)[0]
 
         if board.turn:
             if score > alpha:
@@ -84,4 +84,4 @@ def search(board: chess.Board, evaluate_board: callable, depth: int = 7, alpha =
 
 
 def greedy_search(board: chess.Board, depth: int = 5):
-    return search(board, get_material_difference, depth)
+    return tree_search(board, get_material_difference, depth)
