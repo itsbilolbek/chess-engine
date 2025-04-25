@@ -1,9 +1,19 @@
 from random import getrandbits
+from enum import Enum
 import chess
+
+piece_types = [
+    chess.PAWN, 
+    chess.KNIGHT, 
+    chess.BISHOP, 
+    chess.ROOK, 
+    chess.QUEEN, 
+    chess.KING
+]
 
 zobrist_table = {
     piece: [getrandbits(64) for _ in range(64)]
-    for piece in chess.PieceType
+    for piece in piece_types
 }
 
 zobrist_black_to_move = getrandbits(64)
@@ -18,8 +28,8 @@ zobrist_castling = {
 
 def zobrist_hash(board: chess.Board):
     h = 0
-    for square, piece in board.piece_map():
-        h ^= zobrist_table[piece][square]
+    for square, piece in board.piece_map().items():
+        h ^= zobrist_table[piece.piece_type][square]
 
     if board.turn:
         h ^= zobrist_black_to_move
