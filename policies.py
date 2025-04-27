@@ -1,6 +1,7 @@
 import chess
 from abc import ABC
 from hash import zobrist_hash
+from typing import Callable
 
 CHECKMATE_SCORE = 1000000
 
@@ -44,7 +45,7 @@ def get_material_difference(board: chess.Board) -> int:
 
 # def ids(board: chess.Board, heuristic: callable, depth: int = 7) 
 
-def minimax(board: chess.Board, evaluate_board: callable, depth: int = 7, alpha = -CHECKMATE_SCORE, beta = CHECKMATE_SCORE):
+def minimax(board: chess.Board, evaluate_board: Callable[[chess.Board], int], depth: int = 7, alpha = -CHECKMATE_SCORE, beta = CHECKMATE_SCORE):
     if board.is_checkmate():
         if board.turn:
             return -CHECKMATE_SCORE, board.peek()
@@ -103,7 +104,7 @@ class Player:
 
 
 class Bot(ABC):
-    def __init__(self, policy: callable):
+    def __init__(self, policy: Callable[[chess.Board], tuple[int, chess.Move]], depth: int = 5):
         """
         Initialize the Bot with a color and a policy function.
         :param policy: A callable function that takes a chess board and returns a move in UCI.
@@ -111,6 +112,7 @@ class Bot(ABC):
         if policy is None:
             raise ValueError("Policy function must be provided.")
         self.policy = policy
+        self.depth = depth
 
     def make_move(self, board: chess.Board):
         # Simple AI: Random move
@@ -122,11 +124,12 @@ class Bot(ABC):
 
 
 class MinimaxBot(Bot, ABC):
-    def __init__(self, evaluate_board: callable, depth: int = 5):
-        policy = lambda board: minimax(board, evaluate_board, depth)
-        super().__init__(policy)
+    def __init__(self, eval: Callable[[chess.Board], int], depth: int = 5):
+        policy = lambda board: minimax(board, eval, depth)
+        super().__init__(policy, depth)
         self.depth = depth
-        self.evaluate_board = evaluate_board
+        policy = lambda board: minimax(board, eval, self.depth)
+        self.evaluate_board = eval
 
 
 class GreedyBot(MinimaxBot):
