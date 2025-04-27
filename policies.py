@@ -1,9 +1,20 @@
 import chess
 from abc import ABC
 from hash import zobrist_hash
-from typing import Callable
+from typing import Callable, TypeAlias
+import numpy as np
 
 CHECKMATE_SCORE = 1000000
+HASH_LENGTH = 20
+TTABLE_SIZE = 2**HASH_LENGTH
+TT_ENABLED = True
+
+ttable_entry_type = np.dtype([
+            ("hash", np.uint64),
+            ("depth", np.int32),
+            ("eval", np.int32),
+            ("move", "S5"),
+        ])
 
 
 def random_move(board: chess.Board) -> chess.Move:
@@ -40,10 +51,19 @@ def get_material_difference(board: chess.Board) -> int:
     return white_material - black_material
 
 
-def minimax(board_: chess.Board, eval: Callable[[chess.Board], float], depth: int = 7):
+def minimax(board_: chess.Board, eval: Callable[[chess.Board], int], depth: int = 7, ttable: np.ndarray = np.empty(TTABLE_SIZE, dtype=ttable_entry_type)) -> chess.Move:
     board = board_.copy()
+    nodes_visited: int = 0
 
-    def minimax_inner(depth, alpha: int = -CHECKMATE_SCORE, beta: int = CHECKMATE_SCORE):
+    def minimax_inner(depth, alpha: int = -CHECKMATE_SCORE, beta: int = CHECKMATE_SCORE) -> tuple[int, chess.Move]:
+        nonlocal nodes_visited
+        nodes_visited += 1
+        hash = zobrist_hash(board, HASH_LENGTH)
+        tt_entry = ttable[hash]
+        if tt_entry["hash"] == hash:
+            move = chess.Move.from_uci(tt_entry["move"].decode("utf-8"))
+            return tt_entry["eval"], move
+
         if board.is_checkmate():
             if board.turn == chess.WHITE:
                 return -CHECKMATE_SCORE, board.peek()
@@ -56,7 +76,7 @@ def minimax(board_: chess.Board, eval: Callable[[chess.Board], float], depth: in
         if depth == 0:
             return eval(board), board.peek()
         
-        possible_moves = []
+        possible_moves: list[tuple[int, chess.Move]] = []
         
         for move in board.legal_moves:
             
@@ -77,12 +97,22 @@ def minimax(board_: chess.Board, eval: Callable[[chess.Board], float], depth: in
 
             possible_moves.append((score, move))
         
-        if board.turn:
-            return max(possible_moves, key=lambda x: x[0])
+        if board.turn == chess.WHITE:
+            score, move = max(possible_moves, key=lambda x: x[0])
         else:
-            return min(possible_moves, key=lambda x: x[0])
-    
-    return minimax_inner(depth)[1]
+            score, move = min(possible_moves, key=lambda x: x[0])
+        
+        if TT_ENABLED:
+            tt_entry["hash"] = hash
+            tt_entry["depth"] = depth
+            tt_entry["eval"] = score
+            tt_entry["move"] = move.uci()
+
+        return score, move
+
+    move = minimax_inner(depth)[1]
+    print(f"Nodes visited: {nodes_visited}")
+    return move
     
 
 
@@ -115,8 +145,9 @@ class MinimaxBot(Bot, ABC):
         policy = lambda board: minimax(board, eval, depth)
         super().__init__(policy, depth)
         self.depth = depth
-        policy = lambda board: minimax(board, eval, self.depth)
+        self.ttable = np.empty(TTABLE_SIZE, dtype=ttable_entry_type)
         self.evaluate_board = eval
+        policy = lambda board: minimax(board, eval, self.depth, self.ttable)
 
 
 class Player(Bot):
