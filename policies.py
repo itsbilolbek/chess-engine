@@ -5,7 +5,7 @@ from typing import Callable, TypeAlias
 import numpy as np
 
 CHECKMATE_SCORE = 1000000
-HASH_LENGTH = 20
+HASH_LENGTH = 22
 TTABLE_SIZE = 2**HASH_LENGTH
 TT_ENABLED = True
 
@@ -54,53 +54,58 @@ def get_material_difference(board: chess.Board) -> int:
 def minimax(board_: chess.Board, eval: Callable[[chess.Board], int], depth: int = 7, ttable: np.ndarray = np.empty(TTABLE_SIZE, dtype=ttable_entry_type)) -> chess.Move:
     board = board_.copy()
     nodes_visited: int = 0
+    tt_hits = 0
 
     def minimax_inner(depth, alpha: int = -CHECKMATE_SCORE, beta: int = CHECKMATE_SCORE) -> tuple[int, chess.Move]:
         nonlocal nodes_visited
+        nonlocal tt_hits
         nodes_visited += 1
         hash = zobrist_hash(board, HASH_LENGTH)
         tt_entry = ttable[hash]
+
         if tt_entry["hash"] == hash:
+            tt_hits += 1
             move = chess.Move.from_uci(tt_entry["move"].decode("utf-8"))
             return tt_entry["eval"], move
+        
+        score = 0
+        move = chess.Move.null()
 
         if board.is_checkmate():
             if board.turn == chess.WHITE:
-                return -CHECKMATE_SCORE, board.peek()
+                score = -CHECKMATE_SCORE
             else:
-                return CHECKMATE_SCORE, board.peek()
-        
-        if board.is_stalemate() or board.is_insufficient_material():
-            return 0, board.peek()
-
-        if depth == 0:
-            return eval(board), board.peek()
-        
-        possible_moves: list[tuple[int, chess.Move]] = []
-        
-        for move in board.legal_moves:
-            
-            board.push(move)
-            score = minimax_inner(depth - 1, alpha, beta)[0]
-            board.pop()
-
-            if board.turn == chess.WHITE:
-                if score > alpha:
-                    alpha = score
-                elif score >= beta:
-                    return score, move
-            else:
-                if score < beta:
-                    beta = score
-                elif score <= alpha:
-                    return score, move
-
-            possible_moves.append((score, move))
-        
-        if board.turn == chess.WHITE:
-            score, move = max(possible_moves, key=lambda x: x[0])
+                score = CHECKMATE_SCORE
+        elif board.is_stalemate() or board.is_insufficient_material():
+            score = 0
+        elif depth == 0:
+            return eval(board), move
         else:
-            score, move = min(possible_moves, key=lambda x: x[0])
+            possible_moves: list[tuple[int, chess.Move]] = []
+        
+            for move in board.legal_moves:
+                
+                board.push(move)
+                score = minimax_inner(depth - 1, alpha, beta)[0]
+                board.pop()
+
+                if board.turn == chess.WHITE:
+                    if score > alpha:
+                        alpha = score
+                    elif score >= beta:
+                        return score, move
+                else:
+                    if score < beta:
+                        beta = score
+                    elif score <= alpha:
+                        return score, move
+
+                possible_moves.append((score, move))
+        
+            if board.turn == chess.WHITE:
+                score, move = max(possible_moves, key=lambda x: x[0])
+            else:
+                score, move = min(possible_moves, key=lambda x: x[0])
         
         if TT_ENABLED:
             tt_entry["hash"] = hash
@@ -112,6 +117,7 @@ def minimax(board_: chess.Board, eval: Callable[[chess.Board], int], depth: int 
 
     move = minimax_inner(depth)[1]
     print(f"Nodes visited: {nodes_visited}")
+    print(f"TT hits: {tt_hits}")
     return move
     
 
