@@ -26,7 +26,7 @@ zobrist_castling = {
 }
 
 
-def zobrist_hash(board: chess.Board):
+def zobrist_hash(board: chess.Board, length: int = 64) -> int:
     h = 0
     for square, piece in board.piece_map().items():
         h ^= zobrist_table[piece.piece_type][square]
@@ -47,4 +47,4 @@ def zobrist_hash(board: chess.Board):
 
     # TODO: handle en passant squares with FEN
     
-    return h
+    return h & ((1 << length) - 1)
