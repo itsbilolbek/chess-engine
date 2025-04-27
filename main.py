@@ -1,35 +1,31 @@
 import chess
-from policies import *
+from policies import Player, Bot, greedy_bot
 
 
-def start_game(white_player: Player, black_player: Player):
-    board = chess.Board()
+def start_game(white_player: Bot, black_player: Bot, board = chess.Board()):
     while not board.is_game_over():
-        if board.turn:
+        if board.turn == chess.WHITE:
             white_player.make_move(board)
         else:
             black_player.make_move(board)
         print(board)
         print("\n")
     
-    print_result(board.outcome())
+    print("Game Over!")
 
-
-def print_result(outcome: chess.Outcome):
-    match outcome.termination:
-        case chess.Termination.CHECKMATE:
-            print("Checkmate!")
-        case chess.Termination.STALEMATE:
-            print("Stalemate!")
-        case chess.Termination.INSUFFICIENT_MATERIAL:
-            print("Insufficient material!")
-        case chess.Termination.FIFTY_MOVES:
-            print("Fifty moves rule!")
+    if board.is_checkmate():
+        print("Checkmate!")
+    if board.is_stalemate():
+        print("Stalemate!")
+    if board.is_insufficient_material():
+        print("Insufficient material!")
+    if board.is_fifty_moves():
+        print("Fifty moves rule!")
     
-    print(f"Result: {outcome.result()}")
+    print(board.result())
     
 
 if __name__ == "__main__":
     white_player = Player("White")
-    black_player = GreedyBot()
+    black_player = greedy_bot
     start_game(white_player, black_player)
