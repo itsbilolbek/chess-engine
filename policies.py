@@ -40,11 +40,6 @@ def get_material_difference(board: chess.Board) -> int:
     return white_material - black_material
 
 
-# def heuristic(board: chess.Board, move: chess.Move) -> float:
-#     pass
-
-# def ids(board: chess.Board, heuristic: callable, depth: int = 7) 
-
 def minimax(board_: chess.Board, eval: Callable[[chess.Board], float], depth: int = 7):
     board = board_.copy()
 
