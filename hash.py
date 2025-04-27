@@ -2,14 +2,14 @@ from random import getrandbits
 from enum import Enum
 import chess
 
-piece_types = [
+piece_types = (
     chess.PAWN, 
     chess.KNIGHT, 
     chess.BISHOP, 
     chess.ROOK, 
     chess.QUEEN, 
     chess.KING
-]
+)
 
 zobrist_table = {
     piece: [getrandbits(64) for _ in range(64)]
