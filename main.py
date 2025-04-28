@@ -3,7 +3,7 @@ from policies import Player, Bot, greedy_bot
 
 
 def start_game(white_player: Bot, black_player: Bot, board = chess.Board()):
-    while not board.is_game_over():
+    while not board.is_game_over(claim_draw=True):
         if board.turn == chess.WHITE:
             white_player.make_move(board)
         else:
