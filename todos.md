@@ -1,0 +1,31 @@
+
+## Vision
+- Get at least 1600 elo
+- Host the bot on vps and connect to lichess frontend
+- Make a video demo
+
+- create tests with unittest or other for quick test verifications
+  - Simple move validation
+  - Mate in X tests
+- use cProfile to track performance
+- convert minimax_inner from recursion to loop
+- Use uci move notation instead of chess.Move
+- Add lichess frontend
+- negamax?
+- transpositional table
+- zobrist hashing, inline next move zobrist hash
+- Quiescene search. expand search on capture, check for example
+- piece-square table
+- mobility evaluation
+- piece-square table adjustment for endgame (king mobility)
+- play against each other or other bots, stockfish and save results. use hill climbing algorithm to fine tune parameters
+- Texel tuning?
+- opening book
+- endgame book
+- UCI protocol
+- CuteChess-cli
+- Later: use neural-network (nnue) for eval
+- reinforcement learning with self play
+- RL from stockfish, bots from lichess
+- make an executable?
+- Digital Ocean github student pack
